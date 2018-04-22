@@ -127,45 +127,52 @@ F: 0.785888023548
 """
 
 # root path
-ROOT_PATH = os.path.abspath(r'C:\Users\yangxue\Documents\GitHub\R2CNN_FPN_Tensorflow')
+ROOT_PATH = os.path.abspath(r'/home/ai-i-hanmingfei/proj/R2CNN_FPN_Tensorflow')
 
 # pretrain weights path
 TEST_SAVE_PATH = ROOT_PATH + '/tools/test_result'
-INFERENCE_IMAGE_PATH = ROOT_PATH + '/tools/inference_image'
-INFERENCE_SAVE_PATH = ROOT_PATH + '/tools/inference_result'
+# INFERENCE_IMAGE_PATH = ROOT_PATH + '/tools/inference_image'
+# INFERENCE_SAVE_PATH = ROOT_PATH + '/tools/inference_result'
+INFERENCE_IMAGE_PATH = '/home/ai-i-hanmingfei/datasets/ODAI-ICPR/split_origin/val/images'
+INFERENCE_SAVE_PATH = '/home/ai-i-hanmingfei/datasets/ODAI-ICPR/split_origin/val/s7_inference2_446k_{:s}'
 
 NET_NAME = 'resnet_v1_101'
 VERSION = 'v5'
-CLASS_NUM = 1
+CLASS_NUM = 15
 LEVEL = ['P2', 'P3', 'P4', 'P5', 'P6']
-BASE_ANCHOR_SIZE_LIST = [32, 64, 128, 256, 512]
+BASE_ANCHOR_SIZE_LIST = [16, 32, 64, 128, 256, 512]
 STRIDE = [4, 8, 16, 32, 64]
 ANCHOR_SCALES = [1.]
-ANCHOR_RATIOS = [1 / 3., 1., 3.0]
+ANCHOR_RATIOS = [1 / 3., 1./5., 3./4., 1., 4./3., 3.0, 5.0]
 SCALE_FACTORS = [10., 10., 5., 5., 5.]
 OUTPUT_STRIDE = 16
 SHORT_SIDE_LEN = 600
-DATASET_NAME = 'ship'
+DATASET_NAME = 'dota'
 
 BATCH_SIZE = 1
 WEIGHT_DECAY = {'resnet_v1_50': 0.0001, 'resnet_v1_101': 0.0001}
 EPSILON = 1e-5
 MOMENTUM = 0.9
-MAX_ITERATION = 40000
-GPU_GROUP = "1"
-LR = 0.001
+MAX_ITERATION = 800000
+GPU_GROUP = "0"
+LR = 0.002
 
 # rpn
 SHARE_HEAD = False
 RPN_NMS_IOU_THRESHOLD = 0.7
-MAX_PROPOSAL_NUM = 300
-RPN_IOU_POSITIVE_THRESHOLD = 0.7
-RPN_IOU_NEGATIVE_THRESHOLD = 0.3
-RPN_MINIBATCH_SIZE = 256
+# MAX_PROPOSAL_NUM = 300 ###
+MAX_PROPOSAL_NUM = 2000 ### for R2CNN-2 train
+# MAX_PROPOSAL_NUM = 300 ### for R2CNN-1 inference
+RPN_IOU_POSITIVE_THRESHOLD = 0.6
+RPN_IOU_NEGATIVE_THRESHOLD = 0.2
+RPN_MINIBATCH_SIZE = 512 ### for R2CNN-2 train
+# RPN_MINIBATCH_SIZE = 256 ### for R2CNN-1 inference
 RPN_POSITIVE_RATE = 0.5
 IS_FILTER_OUTSIDE_BOXES = True
-RPN_TOP_K_NMS = 3000
-FEATURE_PYRAMID_MODE = 0  # {0: 'feature_pyramid', 1: 'dense_feature_pyramid'}
+# RPN_TOP_K_NMS = 3000 ###
+RPN_TOP_K_NMS = 12000 ### for R2CNN-2 train
+# RPN_TOP_K_NMS = 3000 ### for R2CNN-1 inference
+FEATURE_PYRAMID_MODE = 1  # {0: 'feature_pyramid', 1: 'dense_feature_pyramid'}
 
 # fast rcnn
 ROTATE_NMS_USE_GPU = True
@@ -175,8 +182,12 @@ ROI_POOL_KERNEL_SIZE = 2
 USE_DROPOUT = False
 KEEP_PROB = 0.5
 FAST_RCNN_NMS_IOU_THRESHOLD = 0.15
-FAST_RCNN_NMS_MAX_BOXES_PER_CLASS = 20
-FINAL_SCORE_THRESHOLD = 0.9
+FAST_RCNN_NMS_MAX_BOXES_PER_CLASS = 125 # for R2CNN-2 train
+FAST_RCNN_MAXIMUM_BOXES_PER_IMAGE = 300 # for R2CNN-2 train
+# FAST_RCNN_NMS_MAX_BOXES_PER_CLASS = 20 # for R2CNN-1 inference
+# FAST_RCNN_MAXIMUM_BOXES_PER_IMAGE = 100 # for R2CNN-1 inference
+FINAL_SCORE_THRESHOLD = 0.7
+# FINAL_SCORE_THRESHOLD = 0.9 # for R2CNN-1 inference
 FAST_RCNN_IOU_POSITIVE_THRESHOLD = 0.5
-FAST_RCNN_MINIBATCH_SIZE = 128
-FAST_RCNN_POSITIVE_RATE = 0.25
+FAST_RCNN_MINIBATCH_SIZE = 256
+FAST_RCNN_POSITIVE_RATE = 0.5

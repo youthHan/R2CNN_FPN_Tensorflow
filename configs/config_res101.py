@@ -96,4 +96,9 @@ tf.app.flags.DEFINE_string(
     '../output/res101_trained_weights',
     'the path to save trained_weights'
 )
+tf.app.flags.DEFINE_string(
+    'inference_checkpoint',
+    '../output/ori_setting/res101_trained_weights',
+    'the path to inference trained_weights'
+)
 FLAGS = tf.app.flags.FLAGS

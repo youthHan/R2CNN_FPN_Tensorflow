@@ -22,7 +22,7 @@ from libs.box_utils.boxes_utils import get_horizen_minAreaRectangle
 from libs.fast_rcnn import build_fast_rcnn1
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
 def test(img_num):
@@ -183,7 +183,7 @@ def test(img_num):
 
 
 if __name__ == '__main__':
-    img_num = 2000
+    img_num = 5187
     test(img_num)
 
 

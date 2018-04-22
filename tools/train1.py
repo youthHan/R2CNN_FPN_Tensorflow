@@ -114,7 +114,7 @@ def train():
                                               gtboxes_and_label=gtboxes_and_label,
                                               gtboxes_and_label_minAreaRectangle=gtboxes_and_label_minAreaRectangle,
                                               fast_rcnn_nms_iou_threshold=cfgs.FAST_RCNN_NMS_IOU_THRESHOLD,
-                                              fast_rcnn_maximum_boxes_per_img=100,
+                                              fast_rcnn_maximum_boxes_per_img=cfgs.FAST_RCNN_MAXIMUM_BOXES_PER_IMAGE,
                                               fast_rcnn_nms_max_boxes_per_class=cfgs.FAST_RCNN_NMS_MAX_BOXES_PER_CLASS,
                                               show_detections_score_threshold=cfgs.FINAL_SCORE_THRESHOLD,  # show detections which score >= 0.6
                                               num_classes=cfgs.CLASS_NUM,
@@ -152,7 +152,7 @@ def train():
         global_step = slim.get_or_create_global_step()
 
         lr = tf.train.piecewise_constant(global_step,
-                                         boundaries=[np.int64(20000), np.int64(40000)],
+                                         boundaries=[np.int64(2400000), np.int64(3200000)],
                                          values=[cfgs.LR, cfgs.LR/10, cfgs.LR/100])
         tf.summary.scalar('lr', lr)
         optimizer = tf.train.MomentumOptimizer(lr, momentum=cfgs.MOMENTUM)
@@ -196,8 +196,8 @@ def train():
         saver = tf.train.Saver(max_to_keep=10)
 
         config = tf.ConfigProto()
-        # config.gpu_options.per_process_gpu_memory_fraction = 0.5
-        config.gpu_options.allow_growth = True
+        config.gpu_options.per_process_gpu_memory_fraction = 0.9
+        #config.gpu_options.allow_growth = True
         with tf.Session(config=config) as sess:
             sess.run(init_op)
             if not restorer is None:

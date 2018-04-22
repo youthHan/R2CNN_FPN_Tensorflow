@@ -405,7 +405,12 @@ class RPN(object):
 
             tf.summary.image('/positive_anchors', positive_anchors_in_img)
             tf.summary.image('/negative_anchors', negative_anchors_in_img)
-            top_k_scores, top_k_indices = tf.nn.top_k(minibatch_boxes_scores[:, 1], k=5)
+            # print_tensors(minibatch_boxes_softmax_scores, "minibatch_boxes_softmax_scores")
+            last_dim_num = tf.shape(minibatch_boxes_scores)[-2]
+            k_shown = tf.minimum(30, last_dim_num)
+            # print(k_shown, last_dim_num)
+            top_k_scores, top_k_indices = tf.nn.top_k(minibatch_boxes_scores[:, 1], k=k_shown)
+            print_tensors(minibatch_boxes_scores, "minibatch_boxes_scores")
 
             top_detections_in_img = draw_box_with_color(self.img_batch,
                                                         tf.gather(minibatch_decode_boxes, top_k_indices),

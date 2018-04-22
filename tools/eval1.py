@@ -21,7 +21,7 @@ from libs.box_utils.boxes_utils import get_horizen_minAreaRectangle
 from libs.fast_rcnn import build_fast_rcnn1
 from libs.box_utils import iou_rotate
 
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
 def make_dict_packle(_gtboxes_and_label, _fast_rcnn_decode_boxes, _fast_rcnn_score, _detection_category):
@@ -348,7 +348,7 @@ def eval(rboxes, gboxes, iou_th, use_07_metric, mode):
 if __name__ == '__main__':
     img_num = 1
     # 0: horizontal standard 1: rotate standard
-    mode = 0
+    mode = 1
     eval_ship(img_num, mode)
 
     fr1 = open('gtboxes_horizontal_dict.pkl', 'r')

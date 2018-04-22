@@ -16,21 +16,32 @@ from libs.configs import cfgs
 from tools import restore_model
 from libs.fast_rcnn import build_fast_rcnn1
 
+import threadpool
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
-def get_imgs():
+def get_imgs(id_section=None):
     mkdir(cfgs.INFERENCE_IMAGE_PATH)
     root_dir = cfgs.INFERENCE_IMAGE_PATH
-    img_name_list = os.listdir(root_dir)
+
+    if id_section is None:
+        img_name_list = os.listdir(root_dir)
+        # img_name_list = ['P1089__1__512___0.png']
+        img_list = [cv2.imread(os.path.join(root_dir, img_name))
+                    for img_name in img_name_list]
+    else:
+        img_name_list = os.listdir(root_dir)[id_section[0]:id_section[1]]
+        # img_name_list = ['P1089__1__512___0.png']
+        img_list = [cv2.imread(os.path.join(root_dir, img_name))
+                    for img_name in img_name_list]
     if len(img_name_list) == 0:
         assert 'no test image in {}!'.format(cfgs.INFERENCE_IMAGE_PATH)
-    img_list = [cv2.imread(os.path.join(root_dir, img_name))
-                for img_name in img_name_list]
+
     return img_list, img_name_list
 
 
-def inference():
+def inference(id_section=None):
     with tf.Graph().as_default():
 
         img_plac = tf.placeholder(shape=[None, None, 3], dtype=tf.uint8)
@@ -90,7 +101,7 @@ def inference():
                                               gtboxes_and_label=None,
                                               gtboxes_and_label_minAreaRectangle=None,
                                               fast_rcnn_nms_iou_threshold=cfgs.FAST_RCNN_NMS_IOU_THRESHOLD,
-                                              fast_rcnn_maximum_boxes_per_img=100,
+                                              fast_rcnn_maximum_boxes_per_img=cfgs.FAST_RCNN_MAXIMUM_BOXES_PER_IMAGE,
                                               fast_rcnn_nms_max_boxes_per_class=cfgs.FAST_RCNN_NMS_MAX_BOXES_PER_CLASS,
                                               show_detections_score_threshold=cfgs.FINAL_SCORE_THRESHOLD,
                                               # show detections which score >= 0.6
@@ -127,7 +138,9 @@ def inference():
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(sess, coord)
 
-            imgs, img_names = get_imgs()
+            imgs, img_names = get_imgs(id_section)
+            rotate_boxes_dict = {}
+            h_boxes_dict = {}
             for i, img in enumerate(imgs):
 
                 start = time.time()
@@ -140,22 +153,68 @@ def inference():
                 end = time.time()
 
                 img_np = np.squeeze(_img_batch, axis=0)
-
+                # print(img_np.shape)
                 img_horizontal_np = draw_box_cv(img_np,
                                                 boxes=_fast_rcnn_decode_boxes,
                                                 labels=_detection_category,
-                                                scores=_fast_rcnn_score)
+                                                scores=_fast_rcnn_score,
+                                                # ori_shape=list(img.shape))
+                                                ori_shape=None)
+                img_oriented_np = draw_rotate_box_cv(img_np,
+                                                boxes=_fast_rcnn_decode_boxes_rotate,
+                                                labels=_detection_category_rotate,
+                                                scores=_fast_rcnn_score_rotate,
+                                                # ori_shape=list(img.shape))
+                                                ori_shape=None)
+                # print("shape of img: ", img.shape)
+                # print("shape of img_np: ", img_np.shape)
 
-                img_rotate_np = draw_rotate_box_cv(img_np,
-                                                   boxes=_fast_rcnn_decode_boxes_rotate,
-                                                   labels=_detection_category_rotate,
-                                                   scores=_fast_rcnn_score_rotate)
-                mkdir(cfgs.INFERENCE_SAVE_PATH)
-                cv2.imwrite(cfgs.INFERENCE_SAVE_PATH + '/{}_horizontal_fpn.jpg'.format(img_names[i]), img_horizontal_np)
-                cv2.imwrite(cfgs.INFERENCE_SAVE_PATH + '/{}_rotate_fpn.jpg'.format(img_names[i]), img_rotate_np)
+                mkdir(os.path.join(cfgs.INFERENCE_SAVE_PATH.format('horizontal'), 'images_inference'))
+                mkdir(os.path.join(cfgs.INFERENCE_SAVE_PATH.format('oriented'), 'images_inference'))
+                h_points_boxes, h_labels, h_scores = convert_h_box_to_points(
+                                                    ori_shape=list(img.shape),
+                                                    boxes=_fast_rcnn_decode_boxes,
+                                                    scores=_fast_rcnn_score,
+                                                    labels=_detection_category)
+
+                cv2.imwrite(os.path.join(cfgs.INFERENCE_SAVE_PATH.format('horizontal'), 'images_inference') + '/{}.jpg'.format(img_names[i]), img_horizontal_np)
+                cv2.imwrite(os.path.join(cfgs.INFERENCE_SAVE_PATH.format('oriented'), 'images_inference') + '/{}.jpg'.format(img_names[i]), img_oriented_np)
+                rotate_points_boxes, rotate_labels, rotate_scores = convert_rotate_box_to_points(
+                                                    ori_shape=list(img.shape),
+                                                    boxes=_fast_rcnn_decode_boxes_rotate,
+                                                    scores=_fast_rcnn_score_rotate,
+                                                    labels=_detection_category_rotate)
+
+                h_boxes_dict[img_names[i].split('/')[-1]] = {"boxes": h_points_boxes, "labels":h_labels, "scores":h_scores}
+                rotate_boxes_dict[img_names[i].split('/')[-1]] = {"boxes": rotate_points_boxes, "labels":rotate_labels, "scores":rotate_scores}
                 view_bar('{} cost {}s'.format(img_names[i], (end - start)), i + 1, len(imgs))
             coord.request_stop()
             coord.join(threads)
 
+    return h_boxes_dict, rotate_boxes_dict
+
+
+def multi_threads_inference(max_workers):
+    lens = len(os.listdir(cfgs.INFERENCE_IMAGE_PATH)[:10])
+
+    args = []
+    stride = int(lens / max_workers)
+    for i in range(max_workers):
+        begin = i * stride
+        end = lens if i == max_workers - 1 else (i + 1) * stride
+        print(i, " ", begin, " ", end)
+        args.append([begin, end])
+
+    pool = threadpool.ThreadPool(max_workers)
+    requests = threadpool.makeRequests(inference, args)
+    [pool.putRequest(req) for req in requests]
+    pool.wait()
+
+
 if __name__ == '__main__':
-    inference()
+    h_boxes_dict, rotate_boxes_dict = inference()
+
+    save_prediction(h_boxes_dict, "horizontal")
+    save_prediction(rotate_boxes_dict, "oriented")
+
+    # multi_threads_inference(2)
