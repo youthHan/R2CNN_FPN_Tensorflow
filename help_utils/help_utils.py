@@ -121,7 +121,7 @@ def draw_rotate_box_cv(img, boxes, labels, scores, ori_shape):
         box = box.astype(np.int64)
         y_c, x_c, h, w, theta = box[0], box[1], box[2], box[3], box[4]
 
-        print(box)
+        # print(box)
 
         label = labels[i]
         if label != 0:

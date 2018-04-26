@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$USER_HOME$/tools/DOTA_devkit/.idea/DOTA_devkit.iml" filepath="$USER_HOME$/tools/DOTA_devkit/.idea/DOTA_devkit.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/FPN_v1.iml" filepath="$PROJECT_DIR$/.idea/FPN_v1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../R-DFPN_FPN_Tensorflow/.idea/FPN_v19.iml" filepath="$PROJECT_DIR$/../R-DFPN_FPN_Tensorflow/.idea/FPN_v19.iml" />
     </modules>
   </component>
 </project>
